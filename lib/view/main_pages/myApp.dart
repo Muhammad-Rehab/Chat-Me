@@ -247,10 +247,12 @@ class _MyAppState extends State<MyApplication> with WidgetsBindingObserver {
         MessagesScreen.routeName: (_) => const MessagesScreen(),
         UserProfile.userProfileRoutName: (_) => UserProfile(),
       },
-      home : FutureBuilder(
+      home : Consumer<AuthenticationProvider>(
+        builder: (context, value, _) =>(value.getCurrentUser() == null)
+          ?  const Scaffold(body: AuthenticateScreen())
+          :  FutureBuilder(
         future: Provider.of<AuthenticationProvider>(context).isDataExist(),
-        builder: (context, snapShot) => Consumer<AuthenticationProvider>(
-          builder: (context, value, _) => Scaffold(
+        builder: (context, snapShot) =>  Scaffold(
             bottomNavigationBar: (snapShot.data == true)
                 ? CurvedNavigationBar(
                     height: 60,
@@ -280,9 +282,7 @@ class _MyAppState extends State<MyApplication> with WidgetsBindingObserver {
                     ],
                   )
                 : null,
-            body: (FirebaseAuth.instance.currentUser == null)
-                ? const AuthenticateScreen()
-                : (snapShot.data == true)
+            body: (snapShot.data == true)
                     ? (pageIndex == 0)
                         ? Hero(tag: 'mainScreens', child: MyProfile())
                         : (pageIndex == 1)
@@ -293,8 +293,8 @@ class _MyAppState extends State<MyApplication> with WidgetsBindingObserver {
                                 : Hero(tag: 'mainScreens', child: SettingPage())
                     : PersonalDataEntryScreen(),
           ),
-        ),
       ),
+      )
     );
   }
 }

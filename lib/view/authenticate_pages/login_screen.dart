@@ -1,4 +1,5 @@
 import 'package:chat_me/controller/authenticate_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -61,18 +62,42 @@ class _AuthenticateScreenState extends State<AuthenticateScreen> {
                         onPressed: () async {
                           FocusScope.of(context).unfocus();
                           if (_otpVerificationController.text.length > 6) {
-                            Scaffold.of(context).showBottomSheet((context) =>
-                                Text(AppLocalizations.of(context)!
-                                    .logInScreenOTPError));
+                            ScaffoldMessenger.of(context).showSnackBar( SnackBar(
+                              content: Text(AppLocalizations.of(context)!
+                                  .logInScreenOTPError,
+                              ),
+                            ));
                           } else {
-                            context
-                                .read<AuthenticationProvider>()
-                                .verifyPhoneAuth(
-                                    _otpVerificationController.text, context);
+                            try
+                                {
+                                  context
+                                      .read<AuthenticationProvider>()
+                                      .verifyPhoneAuth(
+                                      _otpVerificationController.text, context);
+                                }on FirebaseAuthException catch (e){
+                              ScaffoldMessenger.of(context).showSnackBar( SnackBar(
+                                content: Text(e.code,
+                                ),
+                              ));
+                            }catch (e){
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                content: Text('An error occurred try again later',),
+                              ),
+                              );
+                            }
                           }
                         },
                         child: Text(
                             AppLocalizations.of(context)!.logInScreenVerify),
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          FocusScope.of(context).unfocus();
+                          setState((){
+                            _isVerifyScreen = false ;
+                          });
+                        },
+                        child: const Text('Cancel'),
                       ),
                     ],
                   ),

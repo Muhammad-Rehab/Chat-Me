@@ -11,9 +11,14 @@ class AuthenticationProvider extends ChangeNotifier {
   String verificationID = '';
   int? resendToken;
 
+
   final FirebaseAuth auth = FirebaseAuth.instance;
   bool isTimeOut = false;
 
+  User? getCurrentUser(){
+    var currentUser = FirebaseAuth.instance.currentUser ;
+    return currentUser ;
+  }
   logIn(String phoneNumber, BuildContext context) async {
     auth.verifyPhoneNumber(
         phoneNumber: '+2$phoneNumber',
@@ -23,7 +28,7 @@ class AuthenticationProvider extends ChangeNotifier {
           await auth.signInWithCredential(credential);
         },
         verificationFailed: (FirebaseAuthException e) {
-          Scaffold.of(context).showSnackBar(SnackBar(
+         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(e.code),
           ));
         },
@@ -42,15 +47,18 @@ class AuthenticationProvider extends ChangeNotifier {
         await auth.signInWithCredential(PhoneAuthProvider.credential(
       verificationId: verificationID,
       smsCode: smsCode,
-    ));
+    ),
+        );
     if (credential.user != null) {
       Scaffold.of(context).showSnackBar(
           const SnackBar(content: Text('Verification Succeeded')));
-      await FirebaseFirestore.instance
-          .doc('users/${FirebaseAuth.instance.currentUser!.uid}')
-          .update({
-        'appToken': await FirebaseMessaging.instance.getToken() ?? '',
-      });
+      if (await isDataExist()) {
+        await FirebaseFirestore.instance
+            .doc('users/${FirebaseAuth.instance.currentUser!.uid}')
+            .update({
+          'appToken': await FirebaseMessaging.instance.getToken() ?? '',
+        });
+      }
     }
     notifyListeners();
   }

@@ -45,9 +45,9 @@ class PersonalDataEntryProvider extends ChangeNotifier {
           context: context,
           builder: (_) => AlertDialog(
                 title: Text(AppLocalizations.of(context)!
-                    .personalEntryScreenErrorDialogTitle),
+                    .personalEntryScreenImageDialogTitle),
                 content: Text(AppLocalizations.of(context)!
-                    .personalEntryScreenErrorDialogContent),
+                    .personalEntryScreenImageDialogContent),
               ));
       isLoading = false;
       notifyListeners();
