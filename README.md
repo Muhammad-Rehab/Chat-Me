@@ -20,7 +20,7 @@ A new Flutter project.
 • Two languages available (Arabic & English).
 • Smooth User Interfaces.
 • Responsive.
-• Sending notifications (working on it...)
+• Sending notifications
 
 # Programing
 • Dart language.
