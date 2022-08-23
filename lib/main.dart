@@ -38,6 +38,6 @@ void main() async {
       ChangeNotifierProvider(create: (context) => MyProfileProvider()),
       ChangeNotifierProvider(create: (context) => MessageProvider()),
     ],
-    child: MyApp(),
+    child: const MyApp(),
   ));
 }

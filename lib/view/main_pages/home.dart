@@ -15,34 +15,40 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
+  late AppBar appBar;
 
-  late AppBar appBar  ;
-  bool isLandScape = false ;
+  bool isLandScape = false;
+
   @override
   Widget build(BuildContext context) {
     appBar = AppBar(
-        title: Text(AppLocalizations.of(context)!.homePageTitle),
-    actions: [
-    IconButton(
-    onPressed: () {
-    showSearch(
-    context: context,
-    delegate: Search(Provider.of<ChatProvider>(context,listen: false).data),
+      title: Text(AppLocalizations.of(context)!.homePageTitle),
+      actions: [
+        IconButton(
+          onPressed: () {
+            showSearch(
+              context: context,
+              delegate: Search(
+                  Provider.of<ChatProvider>(context, listen: false).data),
+            );
+          },
+          icon: const Icon(Icons.search),
+        )
+      ],
     );
-    },
-    icon: const Icon(Icons.search),
-    )
-    ],
-    ) ;
-    isLandScape = MediaQuery.of(context).orientation == Orientation.landscape ;
+    isLandScape = MediaQuery.of(context).orientation == Orientation.landscape;
     return Scaffold(
-      appBar: appBar ,
+      appBar: appBar,
       body: Column(
         children: [
           Container(
             margin: const EdgeInsets.all(0),
-            height: isLandScape?0: (MediaQuery.of(context).size.height -
-                    MediaQuery.of(context).padding.top - appBar.preferredSize.height) * .3,
+            height: isLandScape
+                ? 0
+                : (MediaQuery.of(context).size.height -
+                        MediaQuery.of(context).padding.top -
+                        appBar.preferredSize.height) *
+                    .3,
             width: double.infinity,
             child: Image.asset(
               'assets/images/chat.jpg',
@@ -51,7 +57,8 @@ class HomePageState extends State<HomePage> {
           ),
           Expanded(
             child: FutureBuilder(
-              future: Provider.of<ChatProvider>(context,listen: false).getHomeData(),
+              future: Provider.of<ChatProvider>(context, listen: false)
+                  .getHomeData(),
               builder: (context, snapShot) => (snapShot.connectionState ==
                       ConnectionState.waiting)
                   ? const Center(
@@ -68,7 +75,9 @@ class HomePageState extends State<HomePage> {
                           : Container(
                               margin: const EdgeInsets.all(10),
                               child: ListView.builder(
-                                itemCount: Provider.of<ChatProvider>(context).data.length,
+                                itemCount: Provider.of<ChatProvider>(context)
+                                    .data
+                                    .length,
                                 itemBuilder: (context, index) => ListTile(
                                   leading: Container(
                                     width: 50,
@@ -83,7 +92,9 @@ class HomePageState extends State<HomePage> {
                                           'assets/images/avatar.jpg',
                                         ),
                                         image: NetworkImage(
-                                            Provider.of<ChatProvider>(context).data[index].personalImage),
+                                            Provider.of<ChatProvider>(context)
+                                                .data[index]
+                                                .personalImage),
                                         fit: BoxFit.fill,
                                       ),
                                     ),
@@ -94,14 +105,22 @@ class HomePageState extends State<HomePage> {
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold),
                                   ),
-                                  subtitle:
-                                      Text(Provider.of<ChatProvider>(context).data[index].phoneNumber),
+                                  subtitle: Text(
+                                      Provider.of<ChatProvider>(context)
+                                          .data[index]
+                                          .phoneNumber),
                                   onTap: () {
                                     Navigator.pushNamed(
                                         context, MessagesScreen.routeName,
                                         arguments: {
-                                          'userData':Provider.of<ChatProvider>(context,listen: false).data[index],
-                                          'currentUserData': Provider.of<ChatProvider>(context,listen: false).currentUserData
+                                          'userData': Provider.of<ChatProvider>(
+                                                  context,
+                                                  listen: false)
+                                              .data[index],
+                                          'currentUserData':
+                                              Provider.of<ChatProvider>(context,
+                                                      listen: false)
+                                                  .currentUserData
                                         });
                                   },
                                   trailing: IconButton(
@@ -109,7 +128,11 @@ class HomePageState extends State<HomePage> {
                                       Navigator.pushNamed(context,
                                           UserProfile.userProfileRoutName,
                                           arguments: {
-                                            'userProfileData': Provider.of<ChatProvider>(context,listen: false).data[index]
+                                            'userProfileData':
+                                                Provider.of<ChatProvider>(
+                                                        context,
+                                                        listen: false)
+                                                    .data[index]
                                           });
                                     },
                                     icon: const Icon(Icons.person),
@@ -168,7 +191,8 @@ class Search extends SearchDelegate<dynamic> {
   Widget buildSuggestions(BuildContext context) {
     List<Users> suggestionList = [];
     (query.isEmpty)
-        ? suggestionList = Provider.of<ChatProvider>(context,listen: false).currentList
+        ? suggestionList =
+            Provider.of<ChatProvider>(context, listen: false).currentList
         : suggestionList.addAll(data.where((element) =>
             "${element.firstName}${element.lastName}"
                 .toLowerCase()
@@ -182,11 +206,15 @@ class Search extends SearchDelegate<dynamic> {
           textAlign: TextAlign.start,
         ),
         onTap: () {
-          Provider.of<ChatProvider>(context,listen: false).currentList.add(suggestionList[index]);
-          selectedText = "${suggestionList[index].firstName} ${suggestionList[index].lastName}}";
+          Provider.of<ChatProvider>(context, listen: false)
+              .currentList
+              .add(suggestionList[index]);
+          selectedText =
+              "${suggestionList[index].firstName} ${suggestionList[index].lastName}}";
           Navigator.pushNamed(context, MessagesScreen.routeName, arguments: {
             'userData': suggestionList[index],
-            'currentUserData': Provider.of<ChatProvider>(context,listen: false).currentUserData
+            'currentUserData': Provider.of<ChatProvider>(context, listen: false)
+                .currentUserData
           });
         },
       ),

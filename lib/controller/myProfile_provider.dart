@@ -1,5 +1,3 @@
-
-
 import 'dart:io';
 
 import 'chat_provider.dart';
@@ -12,9 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-
 class MyProfileProvider extends ChangeNotifier {
-
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   Map<String, String> editingUserData = {
     'firsName': '',
@@ -33,20 +29,17 @@ class MyProfileProvider extends ChangeNotifier {
     formKey.currentState!.save();
     try {
       await FirebaseFirestore.instance
-          .doc('users/${Provider
-          .of<ChatProvider>(context, listen: false)
-          .currentUserData!
-          .id}')
+          .doc(
+              'users/${Provider.of<ChatProvider>(context, listen: false).currentUserData!.id}')
           .update(editingUserData);
-      Scaffold.of(context).showSnackBar(
-          SnackBar(content: Text(
-              AppLocalizations.of(context)!.myProfileSnackBarContent)));
+      Scaffold.of(context).showSnackBar(SnackBar(
+          content:
+              Text(AppLocalizations.of(context)!.myProfileSnackBarContent)));
       notifyListeners();
     } catch (e) {
       showDialog(
           context: context,
-          builder: (_) =>
-              AlertDialog(
+          builder: (_) => AlertDialog(
                 title: Text(AppLocalizations.of(context)!
                     .personalEntryScreenErrorDialogTitle),
                 content: Text(AppLocalizations.of(context)!
@@ -56,7 +49,7 @@ class MyProfileProvider extends ChangeNotifier {
     }
   }
 
-  pickImage(ImageSource source,BuildContext context) async {
+  pickImage(ImageSource source, BuildContext context) async {
     XFile? _image = await ImagePicker().pickImage(
       source: source,
       imageQuality: 30,
@@ -69,20 +62,18 @@ class MyProfileProvider extends ChangeNotifier {
     image = File(_image.path);
     await FirebaseStorage.instance
         .ref(
-        'images/${FirebaseAuth.instance.currentUser!.phoneNumber}/$key.png')
+            'images/${FirebaseAuth.instance.currentUser!.phoneNumber}/$key.png')
         .putFile(image!);
     imageURL = await FirebaseStorage.instance
         .ref(
-        'images/${FirebaseAuth.instance.currentUser!.phoneNumber}/$key.png')
+            'images/${FirebaseAuth.instance.currentUser!.phoneNumber}/$key.png')
         .getDownloadURL();
     await FirebaseFirestore.instance
-        .doc('users/${Provider.of<ChatProvider>(context,listen: false).currentUserData!.id}')
+        .doc(
+            'users/${Provider.of<ChatProvider>(context, listen: false).currentUserData!.id}')
         .update({
       'personalImage': imageURL,
     });
     notifyListeners();
   }
-
-
-
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:chat_me/controller/chat_provider.dart';
@@ -19,8 +20,7 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:path/path.dart' as p;
 import 'package:toast/toast.dart';
-
-
+import 'package:http/http.dart' as http;
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({Key? key}) : super(key: key);
@@ -32,12 +32,15 @@ class MessagesScreen extends StatefulWidget {
 
 class _MessagesScreenState extends State<MessagesScreen>
     with SingleTickerProviderStateMixin {
+  bool isLandScape = false;
 
-  bool isLandScape = false ;
+  Users? currentUserData;
+
   @override
   void initState() {
     Provider.of<Audio>(context, listen: false).initPlayer();
-    Provider.of<MessageProvider>(context,listen: false).controller = AnimationController(
+    Provider.of<MessageProvider>(context, listen: false).controller =
+        AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
@@ -45,12 +48,17 @@ class _MessagesScreenState extends State<MessagesScreen>
   }
 
   @override
-   void dispose() {
-    try{
-      Provider.of<MessageProvider>(context,listen: false).textController.dispose();
-      Provider.of<MessageProvider>(context,listen: false).showDownloadIndicator = false;
-      Provider.of<MessageProvider>(context,listen: false).controller!.dispose();
-    }catch(e){
+  void dispose() {
+    try {
+      Provider.of<MessageProvider>(context, listen: false)
+          .textController
+          .dispose();
+      Provider.of<MessageProvider>(context, listen: false)
+          .showDownloadIndicator = false;
+      Provider.of<MessageProvider>(context, listen: false)
+          .controller!
+          .dispose();
+    } catch (e) {
       print(e.toString());
     }
     super.dispose();
@@ -58,10 +66,15 @@ class _MessagesScreenState extends State<MessagesScreen>
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<MessageProvider>(context,listen: false).arguments = ModalRoute.of(context)!.settings.arguments;
-    Provider.of<MessageProvider>(context,listen: false).currentUserData = Provider.of<MessageProvider>(context,listen: false).arguments['currentUserData'];
+    Provider.of<MessageProvider>(context, listen: false).arguments =
+        ModalRoute.of(context)!.settings.arguments;
+    Provider.of<MessageProvider>(context, listen: false).currentUserData =
+        Provider.of<MessageProvider>(context, listen: false)
+            .arguments['currentUserData'];
+    currentUserData =
+        Provider.of<MessageProvider>(context, listen: false).currentUserData;
     ToastContext().init(context);
-    isLandScape = MediaQuery.of(context).orientation == Orientation.landscape ;
+    isLandScape = MediaQuery.of(context).orientation == Orientation.landscape;
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       themeMode: ThemeProvider.currentThemeMode,
@@ -73,13 +86,17 @@ class _MessagesScreenState extends State<MessagesScreen>
           title: InkWell(
             onTap: () {
               Navigator.pushNamed(context, UserProfile.userProfileRoutName,
-                  arguments: {'userProfileData': Provider.of<MessageProvider>(context,listen: false).arguments['userData']});
+                  arguments: {
+                    'userProfileData':
+                        Provider.of<MessageProvider>(context, listen: false)
+                            .arguments['userData']
+                  });
             },
             child: Container(
               padding: const EdgeInsets.all(10),
               child: Text(
                   '${Provider.of<MessageProvider>(context).arguments['userData'].firstName}'
-                      ' ${Provider.of<MessageProvider>(context).arguments['userData'].lastName}'),
+                  ' ${Provider.of<MessageProvider>(context).arguments['userData'].lastName}'),
             ),
           ),
           leading: IconButton(
@@ -96,10 +113,48 @@ class _MessagesScreenState extends State<MessagesScreen>
           ),
           actions: [
             IconButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_)=> const VideoCall(),
+                  builder: (_) => const VideoCall(),
                 ));
+                String appToken = (await FirebaseFirestore.instance
+                        .collection('users/')
+                        .get())
+                    .docs
+                    .firstWhere((element) =>
+                        element.id ==
+                        Provider.of<MessageProvider>(context, listen: false)
+                            .arguments['userData']
+                            .id)
+                    .data()['appToken'];
+                await http.post(
+                  Uri.parse('https://fcm.googleapis.com/fcm/send'),
+                  headers: <String, String>{
+                    'Content-Type': 'application/json',
+                    'Authorization':
+                        'key=AAAADDTszl4:APA91bED2MEgK5LshA61HvSHg6xWMN_NJQleCMoYrhVKwZMhFlz0HYPCjNe3qfJhjvofYJMAJlTisZG_rvH6GjgeNmA6LbZa06Ow0p4bpSGEpDL-mDYCyXLPHc_YT29kArdCiHUfid68',
+                  },
+                  body: jsonEncode(
+                    <String, dynamic>{
+                      'notification': <String, dynamic>{
+                        'body': 'wants you to join video call',
+                        'title':
+                            '${currentUserData!.firstName} ${currentUserData!.lastName}'
+                      },
+                      'priority': 'high',
+                      'data': <String, dynamic>{
+                        'activity': currentUserData!.activity,
+                        'firsName': currentUserData!.firstName,
+                        'lastName': currentUserData!.lastName,
+                        'id': currentUserData!.id,
+                        'personalImage': currentUserData!.personalImage,
+                        'phoneNumber': currentUserData!.phoneNumber,
+                        'status': currentUserData!.status,
+                      },
+                      'to': appToken,
+                    },
+                  ),
+                );
               },
               icon: const Icon(Icons.video_call_sharp),
             ),
@@ -115,7 +170,7 @@ class _MessagesScreenState extends State<MessagesScreen>
                 stream: FirebaseFirestore.instance
                     .collection(
                       'chats/${FirebaseAuth.instance.currentUser!.phoneNumber}/'
-                      '${Provider.of<MessageProvider>(context,listen: false).arguments['userData'].phoneNumber}',
+                      '${Provider.of<MessageProvider>(context, listen: false).arguments['userData'].phoneNumber}',
                     )
                     .orderBy('time', descending: true)
                     .snapshots(),
@@ -126,7 +181,8 @@ class _MessagesScreenState extends State<MessagesScreen>
                   itemBuilder: (context, index) => messageBubble(
                       snapShot.data!.docs[index].data(),
                       snapShot.data!.docs[index]['sentTo']['phoneNumber'],
-                      Provider.of<MessageProvider>(context,listen: false).currentUserData!,
+                      Provider.of<MessageProvider>(context, listen: false)
+                          .currentUserData!,
                       index),
                 ),
               ),
@@ -135,24 +191,38 @@ class _MessagesScreenState extends State<MessagesScreen>
             Offstage(
               offstage: !Provider.of<MessageProvider>(context).showEmoji,
               child: SizedBox(
-                height: isLandScape?150:250,
+                height: isLandScape ? 150 : 250,
                 child: EmojiPicker(
                   onEmojiSelected: (category, emoji) {
                     setState(() {
-                      Provider.of<MessageProvider>(context,listen: false).textController
+                      Provider.of<MessageProvider>(context, listen: false)
+                          .textController
                         ..text += emoji.emoji
-                        ..selection = TextSelection.fromPosition(
-                            TextPosition(offset: Provider.of<MessageProvider>(context,listen: false).textController.text.length));
+                        ..selection = TextSelection.fromPosition(TextPosition(
+                            offset: Provider.of<MessageProvider>(context,
+                                    listen: false)
+                                .textController
+                                .text
+                                .length));
                     });
                   },
                   onBackspacePressed: () {
                     setState(() {
-                      Provider.of<MessageProvider>(context,listen: false).textController
-                        ..text = Provider.of<MessageProvider>(context,listen: false).textController.text.characters
-                            .skipLast(1)
-                            .toString()
-                        ..selection = TextSelection.fromPosition(
-                            TextPosition(offset:Provider.of<MessageProvider>(context,listen: false).textController.text.length));
+                      Provider.of<MessageProvider>(context, listen: false)
+                          .textController
+                        ..text =
+                            Provider.of<MessageProvider>(context, listen: false)
+                                .textController
+                                .text
+                                .characters
+                                .skipLast(1)
+                                .toString()
+                        ..selection = TextSelection.fromPosition(TextPosition(
+                            offset: Provider.of<MessageProvider>(context,
+                                    listen: false)
+                                .textController
+                                .text
+                                .length));
                     });
                   },
                   config: Config(
@@ -172,9 +242,9 @@ class _MessagesScreenState extends State<MessagesScreen>
                       enableSkinTones: true,
                       showRecentsTab: true,
                       recentsLimit: 28,
-                      noRecentsText: "No Recents",
-                      noRecentsStyle:
-                          const TextStyle(fontSize: 20, color: Colors.black26),
+                      noRecents: const Text("No Recents"),
+                      // noRecentsStyle:
+                      //     const TextStyle(fontSize: 20, color: Colors.black26),
                       tabIndicatorAnimDuration: kTabScrollDuration,
                       categoryIcons: const CategoryIcons(),
                       buttonMode: ButtonMode.MATERIAL),
@@ -210,7 +280,11 @@ class _MessagesScreenState extends State<MessagesScreen>
                 children: [
                   Expanded(
                     child: Text(
-                      Provider.of<MessageProvider>(context).result!.files.first.name,
+                      Provider.of<MessageProvider>(context)
+                          .result!
+                          .files
+                          .first
+                          .name,
                     ),
                   ),
                 ],
@@ -219,10 +293,13 @@ class _MessagesScreenState extends State<MessagesScreen>
           Row(
             children: [
               SizedBox(
-                width:isLandScape?  MediaQuery.of(context).size.width * .9
+                width: isLandScape
+                    ? MediaQuery.of(context).size.width * .9
                     : MediaQuery.of(context).size.width * .82,
-                child: (Provider.of<Audio>(context).recordingState == 'isRecording' ||
-                        Provider.of<Audio>(context).recordingState == 'isPaused')
+                child: (Provider.of<Audio>(context).recordingState ==
+                            'isRecording' ||
+                        Provider.of<Audio>(context).recordingState ==
+                            'isPaused')
                     ? Container(
                         margin: const EdgeInsets.all(10),
                         padding: const EdgeInsets.symmetric(
@@ -243,16 +320,24 @@ class _MessagesScreenState extends State<MessagesScreen>
                                 if (Provider.of<Audio>(context, listen: false)
                                         .recordingState ==
                                     'isPaused') {
-                                  Provider.of<MessageProvider>(context,listen: false).controller!.reverse();
+                                  Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .controller!
+                                      .reverse();
                                 } else {
-                                  Provider.of<MessageProvider>(context,listen: false).controller!.forward();
+                                  Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .controller!
+                                      .forward();
                                 }
                                 Provider.of<Audio>(context, listen: false)
                                     .toggleRecording();
                               },
                               child: AnimatedIcon(
                                 icon: AnimatedIcons.pause_play,
-                                progress: Provider.of<MessageProvider>(context,listen: false).controller!,
+                                progress: Provider.of<MessageProvider>(context,
+                                        listen: false)
+                                    .controller!,
                               ),
                             ),
                           ],
@@ -264,11 +349,17 @@ class _MessagesScreenState extends State<MessagesScreen>
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: TextField(
-                          controller: Provider.of<MessageProvider>(context,listen: false).textController,
-                          enabled: Provider.of<MessageProvider>(context).textFieldEnabled && !isLandScape ,
+                          controller: Provider.of<MessageProvider>(context,
+                                  listen: false)
+                              .textController,
+                          enabled: Provider.of<MessageProvider>(context)
+                                  .textFieldEnabled &&
+                              !isLandScape,
                           onChanged: (value) {
                             setState(() {
-                              Provider.of<MessageProvider>(context,listen: false).currentMessage = value;
+                              Provider.of<MessageProvider>(context,
+                                      listen: false)
+                                  .currentMessage = value;
                             });
                           },
                           minLines: 1,
@@ -278,7 +369,12 @@ class _MessagesScreenState extends State<MessagesScreen>
                             prefixIcon: IconButton(
                               onPressed: () {
                                 setState(() {
-                                  Provider.of<MessageProvider>(context,listen: false).showEmoji = !Provider.of<MessageProvider>(context,listen: false).showEmoji;
+                                  Provider.of<MessageProvider>(context,
+                                              listen: false)
+                                          .showEmoji =
+                                      !Provider.of<MessageProvider>(context,
+                                              listen: false)
+                                          .showEmoji;
                                 });
                               },
                               icon: const Icon(
@@ -292,12 +388,16 @@ class _MessagesScreenState extends State<MessagesScreen>
                               children: [
                                 IconButton(
                                   onPressed: () {
-                                    Provider.of<MessageProvider>(context,listen: false).sendFile();
+                                    Provider.of<MessageProvider>(context,
+                                            listen: false)
+                                        .sendFile();
                                   },
                                   icon: const Icon(Icons.attach_file,
                                       color: Colors.black),
                                 ),
-                                if (Provider.of<MessageProvider>(context).currentMessage == '')
+                                if (Provider.of<MessageProvider>(context)
+                                        .currentMessage ==
+                                    '')
                                   IconButton(
                                     onPressed: () async {
                                       await Provider.of<Audio>(context,
@@ -335,12 +435,16 @@ class _MessagesScreenState extends State<MessagesScreen>
                       ),
               ),
               IconButton(
-                onPressed: (Provider.of<MessageProvider>(context).textController.text.isEmpty &&
+                onPressed: (Provider.of<MessageProvider>(context)
+                            .textController
+                            .text
+                            .isEmpty &&
                         !Provider.of<MessageProvider>(context).isFilePicked &&
                         Provider.of<Audio>(context).recordingPath.isEmpty)
                     ? null
                     : () {
-                  Provider.of<MessageProvider>(context,listen: false).sendMessage(context);
+                        Provider.of<MessageProvider>(context, listen: false)
+                            .sendMessage(context);
                       },
                 icon: const Icon(Icons.send),
                 color: Theme.of(context).backgroundColor,
@@ -374,7 +478,9 @@ class _MessagesScreenState extends State<MessagesScreen>
                           ElevatedButton(
                             onPressed: () async {
                               Navigator.of(context).pop();
-                              Provider.of<MessageProvider>(context,listen: false).deleteMessage(message);
+                              Provider.of<MessageProvider>(context,
+                                      listen: false)
+                                  .deleteMessage(message);
                             },
                             child: Text(
                                 AppLocalizations.of(context)!.messagesPageOkay),
@@ -438,7 +544,7 @@ class _MessagesScreenState extends State<MessagesScreen>
                     Text(
                       (!isMe)
                           ? '${Provider.of<MessageProvider>(context).arguments['userData'].firstName}'
-                          ' ${Provider.of<MessageProvider>(context).arguments['userData'].lastName}'
+                              ' ${Provider.of<MessageProvider>(context).arguments['userData'].lastName}'
                           : '${currentUserData.firstName} ${currentUserData.lastName}',
                       style: const TextStyle(
                         color: Colors.black,
@@ -485,11 +591,18 @@ class _MessagesScreenState extends State<MessagesScreen>
                             child: IconButton(
                               onPressed: () {
                                 setState(() {
-                                  Provider.of<MessageProvider>(context,listen: false).showDownloadIndicator = true;
+                                  Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .showDownloadIndicator = true;
                                 });
-                                Provider.of<MessageProvider>(context,listen: false).downloadFile(message, sentTo, currentUserData,context);
+                                Provider.of<MessageProvider>(context,
+                                        listen: false)
+                                    .downloadFile(message, sentTo,
+                                        currentUserData, context);
                               },
-                              icon:Provider.of<MessageProvider>(context,). showDownloadIndicator
+                              icon: Provider.of<MessageProvider>(
+                                context,
+                              ).showDownloadIndicator
                                   ? const CircularProgressIndicator()
                                   : const Icon(Icons.download_rounded),
                             ),
@@ -513,8 +626,14 @@ class _MessagesScreenState extends State<MessagesScreen>
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           Slider(
-                            value: (Provider.of<MessageProvider>(context,listen: false).sliderIndex == index) ?
-                            Provider.of<MessageProvider>(context,listen: false).sliderValue : 0,
+                            value: (Provider.of<MessageProvider>(context,
+                                            listen: false)
+                                        .sliderIndex ==
+                                    index)
+                                ? Provider.of<MessageProvider>(context,
+                                        listen: false)
+                                    .sliderValue
+                                : 0,
                             min: 0,
                             max: (message['recordLength']).toDouble(),
                             divisions: (message['recordLength']),
@@ -527,35 +646,72 @@ class _MessagesScreenState extends State<MessagesScreen>
                               if (!(Provider.of<Audio>(context, listen: false)
                                   .isPlaying)) {
                                 setState(() {
-                                  Provider.of<MessageProvider>(context,listen: false).sliderIndex = -1;
-                                  Provider.of<MessageProvider>(context,listen: false).sliderValue = 0;
-                                  Provider.of<MessageProvider>(context,listen: false).controller!.reset();
-                                  Provider.of<MessageProvider>(context,listen: false).timer.cancel();
+                                  Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .sliderIndex = -1;
+                                  Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .sliderValue = 0;
+                                  Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .controller!
+                                      .reset();
+                                  Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .timer
+                                      .cancel();
                                 });
                                 return;
                               }
                               setState(() {
-                                Provider.of<MessageProvider>(context,listen: false).sliderIndex = index;
+                                Provider.of<MessageProvider>(context,
+                                        listen: false)
+                                    .sliderIndex = index;
                               });
-                              Provider.of<MessageProvider>(context,listen: false).controller!.forward();
-                              Provider.of<MessageProvider>(context,listen: false).timer = Timer.periodic(
-                                  const Duration(seconds: 1), (timer) {
+                              Provider.of<MessageProvider>(context,
+                                      listen: false)
+                                  .controller!
+                                  .forward();
+                              Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .timer =
+                                  Timer.periodic(const Duration(seconds: 1),
+                                      (timer) {
                                 setState(() {
-                                  if (Provider.of<MessageProvider>(context,listen: false).sliderValue ==
+                                  if (Provider.of<MessageProvider>(context,
+                                              listen: false)
+                                          .sliderValue ==
                                       message['recordLength'].toDouble()) {
-                                    Provider.of<MessageProvider>(context,listen: false).sliderIndex = -1;
-                                    Provider.of<MessageProvider>(context,listen: false).sliderValue = 0;
-                                    Provider.of<MessageProvider>(context,listen: false).controller!.reset();
-                                    Provider.of<MessageProvider>(context,listen: false).timer.cancel();
+                                    Provider.of<MessageProvider>(context,
+                                            listen: false)
+                                        .sliderIndex = -1;
+                                    Provider.of<MessageProvider>(context,
+                                            listen: false)
+                                        .sliderValue = 0;
+                                    Provider.of<MessageProvider>(context,
+                                            listen: false)
+                                        .controller!
+                                        .reset();
+                                    Provider.of<MessageProvider>(context,
+                                            listen: false)
+                                        .timer
+                                        .cancel();
                                     return;
                                   }
-                                  Provider.of<MessageProvider>(context,listen: false).sliderValue++;
+                                  Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .sliderValue++;
                                 });
                               });
                             },
-                            child: (Provider.of<MessageProvider>(context).sliderIndex == index)
+                            child: (Provider.of<MessageProvider>(context)
+                                        .sliderIndex ==
+                                    index)
                                 ? AnimatedIcon(
-                                    progress: Provider.of<MessageProvider>(context,listen: false).controller!,
+                                    progress: Provider.of<MessageProvider>(
+                                            context,
+                                            listen: false)
+                                        .controller!,
                                     icon: AnimatedIcons.play_pause,
                                   )
                                 : const Icon(Icons.play_arrow),
@@ -587,8 +743,14 @@ class _MessagesScreenState extends State<MessagesScreen>
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           Slider(
-                            value: (Provider.of<MessageProvider>(context,listen: false).sliderIndex == index) ?
-                            Provider.of<MessageProvider>(context,listen: false).sliderValue : 0,
+                            value: (Provider.of<MessageProvider>(context,
+                                            listen: false)
+                                        .sliderIndex ==
+                                    index)
+                                ? Provider.of<MessageProvider>(context,
+                                        listen: false)
+                                    .sliderValue
+                                : 0,
                             min: 0,
                             max: (message['recordLength']).toDouble(),
                             divisions: (message['recordLength']),
@@ -602,35 +764,72 @@ class _MessagesScreenState extends State<MessagesScreen>
                               if (!(Provider.of<Audio>(context, listen: false)
                                   .isPlaying)) {
                                 setState(() {
-                                  Provider.of<MessageProvider>(context,listen: false).sliderIndex = -1;
-                                  Provider.of<MessageProvider>(context,listen: false).sliderValue = 0;
-                                  Provider.of<MessageProvider>(context,listen: false).controller!.reset();
-                                  Provider.of<MessageProvider>(context,listen: false).timer.cancel();
+                                  Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .sliderIndex = -1;
+                                  Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .sliderValue = 0;
+                                  Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .controller!
+                                      .reset();
+                                  Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .timer
+                                      .cancel();
                                 });
                                 return;
                               }
                               setState(() {
-                                Provider.of<MessageProvider>(context,listen: false).sliderIndex = index;
+                                Provider.of<MessageProvider>(context,
+                                        listen: false)
+                                    .sliderIndex = index;
                               });
-                              Provider.of<MessageProvider>(context,listen: false).controller!.forward();
-                              Provider.of<MessageProvider>(context,listen: false).timer = Timer.periodic(
-                                  const Duration(seconds: 1), (timer) {
+                              Provider.of<MessageProvider>(context,
+                                      listen: false)
+                                  .controller!
+                                  .forward();
+                              Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .timer =
+                                  Timer.periodic(const Duration(seconds: 1),
+                                      (timer) {
                                 setState(() {
-                                  if (Provider.of<MessageProvider>(context,listen: false).sliderValue ==
+                                  if (Provider.of<MessageProvider>(context,
+                                              listen: false)
+                                          .sliderValue ==
                                       message['recordLength'].toDouble()) {
-                                    Provider.of<MessageProvider>(context,listen: false).sliderIndex = -1;
-                                    Provider.of<MessageProvider>(context,listen: false). sliderValue = 0;
-                                    Provider.of<MessageProvider>(context,listen: false).controller!.reset();
-                                    Provider.of<MessageProvider>(context,listen: false).timer.cancel();
+                                    Provider.of<MessageProvider>(context,
+                                            listen: false)
+                                        .sliderIndex = -1;
+                                    Provider.of<MessageProvider>(context,
+                                            listen: false)
+                                        .sliderValue = 0;
+                                    Provider.of<MessageProvider>(context,
+                                            listen: false)
+                                        .controller!
+                                        .reset();
+                                    Provider.of<MessageProvider>(context,
+                                            listen: false)
+                                        .timer
+                                        .cancel();
                                     return;
                                   }
-                                  Provider.of<MessageProvider>(context,listen: false).sliderValue++;
+                                  Provider.of<MessageProvider>(context,
+                                          listen: false)
+                                      .sliderValue++;
                                 });
                               });
                             },
-                            child: (Provider.of<MessageProvider>(context).sliderIndex == index)
+                            child: (Provider.of<MessageProvider>(context)
+                                        .sliderIndex ==
+                                    index)
                                 ? AnimatedIcon(
-                                    progress: Provider.of<MessageProvider>(context,listen: false).controller!,
+                                    progress: Provider.of<MessageProvider>(
+                                            context,
+                                            listen: false)
+                                        .controller!,
                                     icon: AnimatedIcons.play_pause,
                                   )
                                 : const Icon(Icons.play_arrow),
@@ -648,8 +847,10 @@ class _MessagesScreenState extends State<MessagesScreen>
                               : MainAxisAlignment.start,
                       children: [
                         Text(
-                          Provider.of<ChatProvider>(context).getDate(DateTime.fromMicrosecondsSinceEpoch(
-                              message['time'].microsecondsSinceEpoch),context),
+                          Provider.of<ChatProvider>(context).getDate(
+                              DateTime.fromMicrosecondsSinceEpoch(
+                                  message['time'].microsecondsSinceEpoch),
+                              context),
                           style: const TextStyle(
                             color: Colors.white,
                           ),
@@ -679,8 +880,10 @@ class _MessagesScreenState extends State<MessagesScreen>
                   backgroundImage: const AssetImage(
                     'assets/images/avatar.jpg',
                   ),
-                  foregroundImage:
-                      NetworkImage(Provider.of<MessageProvider>(context).arguments['userData'].personalImage),
+                  foregroundImage: NetworkImage(
+                      Provider.of<MessageProvider>(context)
+                          .arguments['userData']
+                          .personalImage),
                 ),
               ),
           ],

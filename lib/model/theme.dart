@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class MyTheme{
+class MyTheme {
   static final darkTheme = ThemeData(
     appBarTheme: AppBarTheme(
-      backgroundColor: Color(0xFFA12568).withRed(100),
-      foregroundColor: Color(0xFFFEC260),
+      backgroundColor: const Color(0xFFA12568).withRed(100),
+      foregroundColor: const Color(0xFFFEC260),
       elevation: 10,
-      titleTextStyle:const  TextStyle(
+      titleTextStyle: const TextStyle(
         color: Color(0xFFFEC260),
         fontSize: 18,
         fontWeight: FontWeight.bold,
@@ -46,7 +46,7 @@ class MyTheme{
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all(Colors.yellow) ,
+        backgroundColor: MaterialStateProperty.all(Colors.yellow),
         foregroundColor: MaterialStateProperty.all(Colors.black),
       ),
     ),
@@ -70,7 +70,6 @@ class MyTheme{
     splashColor: const Color(0xFFA12568),
     backgroundColor: const Color(0xFFFEC260),
     primaryColor: const Color(0xFF3B185F),
-
   );
 
   static final lightTheme = ThemeData(
@@ -78,17 +77,17 @@ class MyTheme{
       backgroundColor: Color(0xFF075E54),
       foregroundColor: Colors.white,
       elevation: 10,
-      titleTextStyle:  TextStyle(
+      titleTextStyle: TextStyle(
         color: Colors.white,
         fontSize: 18,
         fontWeight: FontWeight.bold,
         letterSpacing: 1.5,
       ),
     ),
-    scaffoldBackgroundColor: Colors.white ,
+    scaffoldBackgroundColor: Colors.white,
     textTheme: const TextTheme(
       headline1: TextStyle(
-        color: Colors.black ,
+        color: Colors.black,
         fontSize: 16,
         fontWeight: FontWeight.bold,
         letterSpacing: 1.5,
@@ -113,11 +112,11 @@ class MyTheme{
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all(const Color(0xFF25D366)) ,
+        backgroundColor: MaterialStateProperty.all(const Color(0xFF25D366)),
         foregroundColor: MaterialStateProperty.all(Colors.black),
       ),
     ),
-    fixTextFieldOutlineLabel: true ,
+    fixTextFieldOutlineLabel: true,
     chipTheme: const ChipThemeData(
       backgroundColor: Color(0xFF25D366),
       disabledColor: Colors.grey,
@@ -135,7 +134,7 @@ class MyTheme{
     ),
     dialogBackgroundColor: Colors.white,
     colorScheme: const ColorScheme.light(),
-    splashColor:const Color(0xFF128C7E),
+    splashColor: const Color(0xFF128C7E),
     primaryColor: const Color(0xFF075E54),
     backgroundColor: const Color(0xFF25D366),
     accentColor: const Color(0xFF34B7F1),

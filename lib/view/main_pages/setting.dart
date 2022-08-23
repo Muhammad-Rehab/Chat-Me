@@ -18,7 +18,8 @@ class _SettingPageState extends State<SettingPage> {
   @override
   Widget build(BuildContext context) {
     _isDark = Provider.of<ThemeProvider>(context, listen: false).isDarkMode();
-    _isArabic = Provider.of<LocalizationsProvider>(context, listen: false).isArabic();
+    _isArabic =
+        Provider.of<LocalizationsProvider>(context, listen: false).isArabic();
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.settingPageTitle),

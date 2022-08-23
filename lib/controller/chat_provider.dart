@@ -1,4 +1,3 @@
-
 import 'package:chat_me/model/messages.dart';
 import 'package:chat_me/model/services/messages_control.dart';
 import 'package:chat_me/model/user.dart';
@@ -11,28 +10,28 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../model/services/users_control.dart';
 
 class ChatProvider extends ChangeNotifier {
-
-
-  final Map<String,Messages> _currentChatUsersList = {};
-
-  Users ? currentUserData;
+  final Map<String, Messages> _currentChatUsersList = {};
+  final _auth = FirebaseAuth.instance;
+  Users? currentUserData;
   List<Users> data = [];
   List<Users> currentList = [];
 
-   getHomeData() async {
+  getHomeData() async {
     await UsersControl.getUsers();
-    if(usersList.isEmpty){
+    if (usersList.isEmpty) {
       notifyListeners();
-      return ;
+      return;
     }
-    data = usersList ;
-    currentUserData = data.firstWhere((element) => (element.phoneNumber==FirebaseAuth.instance.currentUser!.phoneNumber));
-    data.removeWhere((element) => element.phoneNumber== FirebaseAuth.instance.currentUser!.phoneNumber);
-     notifyListeners();
-     return data ;
+    data = usersList;
+    currentUserData = data.firstWhere(
+        (element) => (element.phoneNumber == _auth.currentUser!.phoneNumber));
+    data.removeWhere(
+        (element) => element.phoneNumber == _auth.currentUser!.phoneNumber);
+    notifyListeners();
+    return data;
   }
 
-  String getDate(DateTime time,BuildContext context) {
+  String getDate(DateTime time, BuildContext context) {
     Duration timeDifference = DateTime.now().difference(time);
     if (timeDifference > const Duration(days: 365)) {
       int years = (timeDifference.inDays / 365).round();
@@ -54,44 +53,47 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-   Future<String> getUserActivity(String userID) async {
-
-    return  (await FirebaseFirestore.instance.doc('users/$userID').get())
-      .data()!['activity'] ;
+  Future<String> getUserActivity(String userID) async {
+    return (await FirebaseFirestore.instance.doc('users/$userID').get())
+        .data()!['activity'];
   }
 
   Future<List<Messages>> getChatData() async {
-    (await FirebaseFirestore.instance.collection(
-        'chatList/${FirebaseAuth.instance.currentUser!.phoneNumber}/'
-            '${FirebaseAuth.instance.currentUser!.phoneNumber}').get())
-        .docs.forEach((element) async {
-          await MessagesControl.getCurrentMessage('${FirebaseAuth.instance.currentUser!.phoneNumber}', '${element.data()['phoneNumber']}');
-          if(currentMessage==null){
-            return ;
-          }
-      if(!_currentChatUsersList.keys.toList().contains(element.data()['phoneNumber'])){
-      _currentChatUsersList.addAll({
-        element.data()['phoneNumber'] : currentMessage!
-      });
-      notifyListeners();
+    (await FirebaseFirestore.instance
+            .collection('chatList/${_auth.currentUser!.phoneNumber}/'
+                '${_auth.currentUser!.phoneNumber}')
+            .get())
+        .docs
+        .forEach((element) async {
+      await MessagesControl.getCurrentMessage(
+          '${_auth.currentUser!.phoneNumber}',
+          '${element.data()['phoneNumber']}');
+      if (currentMessage == null) {
+        return;
       }
-      else {
-      _currentChatUsersList.update(element.data()['phoneNumber'], (value) => currentMessage!);
-      notifyListeners();
+      if (!_currentChatUsersList.keys
+          .toList()
+          .contains(element.data()['phoneNumber'])) {
+        _currentChatUsersList
+            .addAll({element.data()['phoneNumber']: currentMessage!});
+        notifyListeners();
+      } else {
+        _currentChatUsersList.update(
+            element.data()['phoneNumber'], (value) => currentMessage!);
+        notifyListeners();
       }
     });
-   currentChatUsersList = _currentChatUsersList.values.toList();
-   currentChatUsersList.sort((a,b)=>a.time.compareTo(b.time));
-   currentChatUsersList = currentChatUsersList.reversed.toList();
-   notifyListeners();
+    currentChatUsersList = _currentChatUsersList.values.toList();
+    currentChatUsersList.sort((a, b) => a.time.compareTo(b.time));
+    currentChatUsersList = currentChatUsersList.reversed.toList();
+    notifyListeners();
     return currentChatUsersList;
   }
 
-  clearData(){
+  clearData() {
     _currentChatUsersList.clear();
     currentChatUsersList.clear();
-    currentMessage = null ;
+    currentMessage = null;
     notifyListeners();
   }
-
 }

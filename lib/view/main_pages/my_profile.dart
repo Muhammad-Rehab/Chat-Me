@@ -1,4 +1,3 @@
-
 import 'package:chat_me/controller/myProfile_provider.dart';
 import 'package:chat_me/view/secondry_pages/user_imagess.dart';
 import 'package:chat_me/controller/theme_provider.dart';
@@ -13,7 +12,6 @@ import 'package:slide_popup_dialog_null_safety/slide_popup_dialog.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-
 class MyProfile extends StatefulWidget {
   static Map<String, String> imagesUrlList = {};
 
@@ -22,7 +20,6 @@ class MyProfile extends StatefulWidget {
 }
 
 class _MyProfileState extends State<MyProfile> {
-
   getSlideDialog(BuildContext context) {
     showSlideDialog(
       backgroundColor: Theme.of(context).splashColor,
@@ -30,7 +27,7 @@ class _MyProfileState extends State<MyProfile> {
       child: Expanded(
         child: SingleChildScrollView(
           child: Form(
-            key: Provider.of<MyProfileProvider>(context,listen: false).formKey,
+            key: Provider.of<MyProfileProvider>(context, listen: false).formKey,
             child: Column(
               children: [
                 Text(
@@ -42,24 +39,32 @@ class _MyProfileState extends State<MyProfile> {
                       const EdgeInsets.symmetric(horizontal: 30, vertical: 5),
                   child: TextFormField(
                     keyboardType: TextInputType.text,
-                    decoration:  InputDecoration(
-                      labelText: AppLocalizations.of(context)!.personalEntryScreenFirstName,
-                      labelStyle: const  TextStyle(
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!
+                          .personalEntryScreenFirstName,
+                      labelStyle: const TextStyle(
                         fontSize: 20,
                       ),
                     ),
-                    initialValue: Provider.of<ChatProvider>(context,listen: false).currentUserData!.firstName,
+                    initialValue:
+                        Provider.of<ChatProvider>(context, listen: false)
+                            .currentUserData!
+                            .firstName,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return AppLocalizations.of(context)!.personalEntryScreenFirstNameError;
+                        return AppLocalizations.of(context)!
+                            .personalEntryScreenFirstNameError;
                       } else if (value.length <= 2) {
-                        return AppLocalizations.of(context)!.myProfileFirstNameError1;
+                        return AppLocalizations.of(context)!
+                            .myProfileFirstNameError1;
                       } else if (value.length >= 20) {
-                        return AppLocalizations.of(context)!.myProfileFirstNameError2;
+                        return AppLocalizations.of(context)!
+                            .myProfileFirstNameError2;
                       }
                     },
                     onSaved: (value) {
-                      Provider.of<MyProfileProvider>(context,listen: false).editingUserData['firsName'] = value!;
+                      Provider.of<MyProfileProvider>(context, listen: false)
+                          .editingUserData['firsName'] = value!;
                     },
                   ),
                 ),
@@ -68,25 +73,32 @@ class _MyProfileState extends State<MyProfile> {
                       const EdgeInsets.symmetric(horizontal: 30, vertical: 5),
                   child: TextFormField(
                     keyboardType: TextInputType.text,
-                    decoration:  InputDecoration(
-                      labelText: AppLocalizations.of(context)!.personalEntryScreenLastName,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!
+                          .personalEntryScreenLastName,
                       labelStyle: const TextStyle(
                         fontSize: 20,
                       ),
                     ),
                     initialValue:
-                    Provider.of<ChatProvider>(context,listen: false).currentUserData!.lastName,
+                        Provider.of<ChatProvider>(context, listen: false)
+                            .currentUserData!
+                            .lastName,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return AppLocalizations.of(context)!.personalEntryScreenLastNameError;
+                        return AppLocalizations.of(context)!
+                            .personalEntryScreenLastNameError;
                       } else if (value.length <= 2) {
-                        return AppLocalizations.of(context)!.myProfileLastNameError1;
+                        return AppLocalizations.of(context)!
+                            .myProfileLastNameError1;
                       } else if (value.length >= 20) {
-                        return AppLocalizations.of(context)!.myProfileLastNameError2;
+                        return AppLocalizations.of(context)!
+                            .myProfileLastNameError2;
                       }
                     },
                     onSaved: (value) {
-                      Provider.of<MyProfileProvider>(context,listen: false).editingUserData['lastName'] = value!;
+                      Provider.of<MyProfileProvider>(context, listen: false)
+                          .editingUserData['lastName'] = value!;
                     },
                   ),
                 ),
@@ -97,26 +109,35 @@ class _MyProfileState extends State<MyProfile> {
                     keyboardType: TextInputType.text,
                     maxLines: 2,
                     maxLength: 100,
-                    decoration:  InputDecoration(
-                      labelText: AppLocalizations.of(context)!.personalEntryScreenStatus,
-                      labelStyle:const  TextStyle(
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!
+                          .personalEntryScreenStatus,
+                      labelStyle: const TextStyle(
                         fontSize: 20,
                       ),
                     ),
-                    initialValue: Provider.of<ChatProvider>(context,listen: false).currentUserData!.status,
+                    initialValue:
+                        Provider.of<ChatProvider>(context, listen: false)
+                            .currentUserData!
+                            .status,
                     onSaved: (value) {
-                      Provider.of<MyProfileProvider>(context,listen: false).editingUserData['status'] = value!;
+                      Provider.of<MyProfileProvider>(context, listen: false)
+                          .editingUserData['status'] = value!;
                     },
                   ),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    Provider.of<MyProfileProvider>(context,listen: false).updateData(context);
+                    Provider.of<MyProfileProvider>(context, listen: false)
+                        .updateData(context);
                     Navigator.of(context).pop();
-                     Provider.of<ChatProvider>(context,listen: false).getHomeData();
-                     Provider.of<ChatProvider>(context,listen: false).getHomeData();
+                    Provider.of<ChatProvider>(context, listen: false)
+                        .getHomeData();
+                    Provider.of<ChatProvider>(context, listen: false)
+                        .getHomeData();
                   },
-                  child:  Text(AppLocalizations.of(context)!.myProfileUpdateData),
+                  child:
+                      Text(AppLocalizations.of(context)!.myProfileUpdateData),
                 ),
               ],
             ),
@@ -139,7 +160,7 @@ class _MyProfileState extends State<MyProfile> {
         });
       });
     });
-    Provider.of<ChatProvider>(context,listen: false).getHomeData();
+    Provider.of<ChatProvider>(context, listen: false).getHomeData();
     UserImages.isMyProfile = true;
     super.initState();
   }
@@ -148,7 +169,7 @@ class _MyProfileState extends State<MyProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:  Text(AppLocalizations.of(context)!.myProfileTitle),
+        title: Text(AppLocalizations.of(context)!.myProfileTitle),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -169,10 +190,13 @@ class _MyProfileState extends State<MyProfile> {
                 child: CircleAvatar(
                   backgroundImage: const AssetImage('assets/images/avatar.jpg'),
                   foregroundImage:
-                      (Provider.of<ChatProvider>(context,listen: false).currentUserData == null)
+                      (Provider.of<ChatProvider>(context, listen: false)
+                                  .currentUserData ==
+                              null)
                           ? null
-                          : NetworkImage(
-                          Provider.of<ChatProvider>(context).currentUserData!.personalImage),
+                          : NetworkImage(Provider.of<ChatProvider>(context)
+                              .currentUserData!
+                              .personalImage),
                   radius: 100,
                 ),
               ),
@@ -205,7 +229,9 @@ class _MyProfileState extends State<MyProfile> {
               ),
               child: ListTile(
                 leading: const Icon(Icons.phone),
-                title: Text(Provider.of<ChatProvider>(context).currentUserData!.phoneNumber),
+                title: Text(Provider.of<ChatProvider>(context)
+                    .currentUserData!
+                    .phoneNumber),
               ),
             ),
             const Divider(),
@@ -258,20 +284,37 @@ class _MyProfileState extends State<MyProfile> {
                             child: Column(
                               children: [
                                 ElevatedButton(
-                                  onPressed: () async{
-                                    await Provider.of<MyProfileProvider>(context,listen: false).pickImage(ImageSource.camera,context);
-                                    Provider.of<ChatProvider>(context,listen: false).getHomeData();
-                                    Provider.of<ChatProvider>(context,listen: false).getHomeData();
+                                  onPressed: () async {
+                                    await Provider.of<MyProfileProvider>(
+                                            context,
+                                            listen: false)
+                                        .pickImage(ImageSource.camera, context);
+                                    Provider.of<ChatProvider>(context,
+                                            listen: false)
+                                        .getHomeData();
+                                    Provider.of<ChatProvider>(context,
+                                            listen: false)
+                                        .getHomeData();
                                   },
-                                  child:  Text(AppLocalizations.of(context)!.personalEntryScreenCamera),
+                                  child: Text(AppLocalizations.of(context)!
+                                      .personalEntryScreenCamera),
                                 ),
                                 ElevatedButton(
                                   onPressed: () async {
-                                    await Provider.of<MyProfileProvider>(context,listen: false).pickImage(ImageSource.gallery,context);
-                                    Provider.of<ChatProvider>(context,listen: false).getHomeData();
-                                    Provider.of<ChatProvider>(context,listen: false).getHomeData();
+                                    await Provider.of<MyProfileProvider>(
+                                            context,
+                                            listen: false)
+                                        .pickImage(
+                                            ImageSource.gallery, context);
+                                    Provider.of<ChatProvider>(context,
+                                            listen: false)
+                                        .getHomeData();
+                                    Provider.of<ChatProvider>(context,
+                                            listen: false)
+                                        .getHomeData();
                                   },
-                                  child: Text(AppLocalizations.of(context)!.personalEntryScreenGallery),
+                                  child: Text(AppLocalizations.of(context)!
+                                      .personalEntryScreenGallery),
                                 ),
                               ],
                             ),

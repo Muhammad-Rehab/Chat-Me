@@ -12,20 +12,24 @@ import 'package:toast/toast.dart';
 import '../model/user.dart';
 
 class Audio extends ChangeNotifier {
-
   final _myAudioRecorder = FlutterSoundRecorder();
   final _myAudioPlayer = FlutterSoundPlayer();
 
   String recordingState = '';
-  bool isPlaying = false ;
+  bool isPlaying = false;
 
   String recordingPath = '';
   int audioLength = 0;
 
   Timer? _timer;
 
+  final FirebaseStorage _firebaseStorage = FirebaseStorage.instance;
+
+  final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
+
   FlutterSoundRecorder get myAudioRecorder => _myAudioRecorder;
-  FlutterSoundPlayer get myAudioPlayer => _myAudioPlayer ;
+
+  FlutterSoundPlayer get myAudioPlayer => _myAudioPlayer;
 
   _getRecordingState() {
     if (_myAudioRecorder.isPaused) {
@@ -45,6 +49,7 @@ class Audio extends ChangeNotifier {
     }
     _getRecordingState();
   }
+
   disposeRecorder() async {
     await _myAudioRecorder.closeAudioSession();
     _getRecordingState();
@@ -94,75 +99,87 @@ class Audio extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future sendRecord () async {
-
+  Future sendRecord() async {
     final key = UniqueKey().toString();
-    await FirebaseStorage.instance.ref('Recorders/$key.aac').putFile(File(recordingPath));
-    recordingPath =  FirebaseStorage.instance.ref('Recorders/$key.aac').fullPath;
+    await _firebaseStorage
+        .ref('Recorders/$key.aac')
+        .putFile(File(recordingPath));
+    recordingPath = _firebaseStorage.ref('Recorders/$key.aac').fullPath;
     notifyListeners();
   }
 
-  Future downloadRecord (Map<String,dynamic> message,String sendTo,Users currentUserData) async {
+  Future downloadRecord(Map<String, dynamic> message, String sendTo,
+      Users currentUserData) async {
     final dir = await getApplicationDocumentsDirectory();
-    final ref =  FirebaseStorage.instance.ref(message['filePath']).name;
-    await FirebaseStorage.instance.ref(message['filePath']).writeToFile(File('${dir.path}/$ref'));
-    Toast.show('Downloaded File $ref',);
-    if(currentUserData.phoneNumber==sendTo){
-      await FirebaseFirestore.instance.doc('chats/${message['sentFrom']['phoneNumber']}/${message['sentTo']['phoneNumber']}/${message['messageID']}')
+    final ref = _firebaseStorage.ref(message['filePath']).name;
+    await _firebaseStorage
+        .ref(message['filePath'])
+        .writeToFile(File('${dir.path}/$ref'));
+    Toast.show(
+      'Downloaded File $ref',
+    );
+    if (currentUserData.phoneNumber == sendTo) {
+      await _firebaseFirestore
+          .doc(
+              'chats/${message['sentFrom']['phoneNumber']}/${message['sentTo']['phoneNumber']}/${message['messageID']}')
           .update({
-        'receiverFilePath':'${dir.path}/$ref',
+        'receiverFilePath': '${dir.path}/$ref',
         'messageType': 'Record Saved 2',
       });
-      await FirebaseFirestore.instance.doc('chats/${message['sentTo']['phoneNumber']}/'
-          '${message['sentFrom']['phoneNumber']}/${message['messageID']}')
+      await _firebaseFirestore
+          .doc('chats/${message['sentTo']['phoneNumber']}/'
+              '${message['sentFrom']['phoneNumber']}/${message['messageID']}')
           .update({
-        'receiverFilePath':'${dir.path}/$ref',
+        'receiverFilePath': '${dir.path}/$ref',
         'messageType': 'Record Saved 2',
       });
-    }else{
-      await FirebaseFirestore.instance.doc('chats/${currentUserData.phoneNumber}/$sendTo/${message['messageID']}')
+    } else {
+      await _firebaseFirestore
+          .doc(
+              'chats/${currentUserData.phoneNumber}/$sendTo/${message['messageID']}')
           .update({
-        'message':'${dir.path}/$ref',
+        'message': '${dir.path}/$ref',
         'messageType': 'Record Saved',
       });
-      await FirebaseFirestore.instance.doc('chats/$sendTo/${currentUserData.phoneNumber}/${message['messageID']}')
+      await _firebaseFirestore
+          .doc(
+              'chats/$sendTo/${currentUserData.phoneNumber}/${message['messageID']}')
           .update({
-        'message':'${dir.path}/$ref',
+        'message': '${dir.path}/$ref',
         'messageType': 'Record Saved',
       });
     }
-
   }
 
-  initPlayer() async{
+  initPlayer() async {
     await _myAudioPlayer.openAudioSession();
     notifyListeners();
   }
-  disposePlayer() async{
+
+  disposePlayer() async {
     await _myAudioPlayer.closeAudioSession();
     notifyListeners();
   }
 
-  Future stopPlayer() async{
-   await _myAudioPlayer.stopPlayer();
- }
+  Future stopPlayer() async {
+    await _myAudioPlayer.stopPlayer();
+  }
 
-  Future startPlayer(String path,VoidCallback fn) async {
+  Future startPlayer(String path, VoidCallback fn) async {
     await _myAudioPlayer.startPlayer(
       fromURI: path,
-      whenFinished: fn ,
+      whenFinished: fn,
     );
   }
 
-  togglePlayer(String path,VoidCallback fn) {
-    if(_myAudioPlayer.isPlaying){
+  togglePlayer(String path, VoidCallback fn) {
+    if (_myAudioPlayer.isPlaying) {
       stopPlayer();
       isPlaying = false;
-    }else{
-      startPlayer(path,fn);
-      isPlaying = true ;
+    } else {
+      startPlayer(path, fn);
+      isPlaying = true;
     }
     notifyListeners();
   }
-
 }

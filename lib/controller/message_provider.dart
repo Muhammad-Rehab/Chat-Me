@@ -1,20 +1,22 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:toast/toast.dart';
+import 'package:http/http.dart' as http;
 
 import '../model/user.dart';
 import 'audio_provider.dart';
 
 class MessageProvider extends ChangeNotifier {
-
   final textController = TextEditingController();
   String currentMessage = '';
   String temporaryCurrentMessage = '';
@@ -33,9 +35,19 @@ class MessageProvider extends ChangeNotifier {
   Users? currentUserData;
   var arguments;
   int sliderIndex = -1;
+  String appToken = '';
 
   Timer timer = Timer(Duration.zero, () {});
   FilePickerResult? result;
+
+  final _fireStore = FirebaseFirestore.instance;
+
+  final _auth = FirebaseAuth.instance;
+
+  final _storage = FirebaseStorage.instance;
+
+  String serverToken =
+      'AAAADDTszl4:APA91bED2MEgK5LshA61HvSHg6xWMN_NJQleCMoYrhVKwZMhFlz0HYPCjNe3qfJhjvofYJMAJlTisZG_rvH6GjgeNmA6LbZa06Ow0p4bpSGEpDL-mDYCyXLPHc_YT29kArdCiHUfid68';
 
   sendMessage(BuildContext context) async {
     try {
@@ -56,11 +68,11 @@ class MessageProvider extends ChangeNotifier {
         notifyListeners();
       }
 
-      await FirebaseFirestore.instance
+      await _fireStore
           .collection('chats/${currentUserData!.phoneNumber}'
               '/${arguments['userData'].phoneNumber}')
           .add({}).then((value) {
-        FirebaseFirestore.instance
+        _fireStore
             .doc('chats/${currentUserData!.phoneNumber}'
                 '/${arguments['userData'].phoneNumber}/${value.id}')
             .update({
@@ -89,7 +101,7 @@ class MessageProvider extends ChangeNotifier {
           'messageType': messageType,
           'recordLength': _audioLength,
         });
-        FirebaseFirestore.instance
+        _fireStore
             .doc('chats/${arguments['userData'].phoneNumber}/'
                 '${currentUserData!.phoneNumber}/${value.id}')
             .set({
@@ -154,10 +166,9 @@ class MessageProvider extends ChangeNotifier {
       messageType = 'String';
       textFieldEnabled = true;
       showDownloadIndicator = false;
-      chatList = (await FirebaseFirestore.instance
-              .collection(
-                  'chatList/${FirebaseAuth.instance.currentUser!.phoneNumber}/'
-                  '${FirebaseAuth.instance.currentUser!.phoneNumber}')
+      chatList = (await _fireStore
+              .collection('chatList/${_auth.currentUser!.phoneNumber}/'
+                  '${_auth.currentUser!.phoneNumber}')
               .get())
           .docs
           .map((e) => e.data())
@@ -165,29 +176,60 @@ class MessageProvider extends ChangeNotifier {
 
       if (!chatList.any((element) =>
           element['phoneNumber'] == arguments['userData'].phoneNumber)) {
-        FirebaseFirestore.instance
-            .collection(
-                'chatList/${FirebaseAuth.instance.currentUser!.phoneNumber}/'
-                '${FirebaseAuth.instance.currentUser!.phoneNumber}')
+        _fireStore
+            .collection('chatList/${_auth.currentUser!.phoneNumber}/'
+                '${_auth.currentUser!.phoneNumber}')
             .add({}).then((value) {
-          FirebaseFirestore.instance
-              .doc('chatList/${FirebaseAuth.instance.currentUser!.phoneNumber}/'
-                  '${FirebaseAuth.instance.currentUser!.phoneNumber}/${value.id}')
+          _fireStore
+              .doc('chatList/${_auth.currentUser!.phoneNumber}/'
+                  '${_auth.currentUser!.phoneNumber}/${value.id}')
               .update({
             'phoneNumber': arguments['userData'].phoneNumber.toString(),
             'id': value.id
           });
-          FirebaseFirestore.instance
+          _fireStore
               .doc('chatList/${arguments['userData'].phoneNumber}/'
                   '${arguments['userData'].phoneNumber}/${value.id}')
               .set({
-            'phoneNumber': FirebaseAuth.instance.currentUser!.phoneNumber,
+            'phoneNumber': _auth.currentUser!.phoneNumber,
             'id': value.id
           });
         });
         notifyListeners();
       }
+      appToken = (await _fireStore.collection('users/').get())
+          .docs
+          .firstWhere((element) => element.id == arguments['userData'].id)
+          .data()['appToken'];
+      await http.post(
+        Uri.parse('https://fcm.googleapis.com/fcm/send'),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Authorization': 'key=$serverToken',
+        },
+        body: jsonEncode(
+          <String, dynamic>{
+            'notification': <String, dynamic>{
+              'body': temporaryCurrentMessage,
+              'title':
+                  '${currentUserData!.firstName} ${currentUserData!.lastName}'
+            },
+            'priority': 'high',
+            'data': <String, dynamic>{
+              'activity': currentUserData!.activity,
+              'firsName': currentUserData!.firstName,
+              'lastName': currentUserData!.lastName,
+              'id': currentUserData!.id,
+              'personalImage': currentUserData!.personalImage,
+              'phoneNumber': currentUserData!.phoneNumber,
+              'status': currentUserData!.status,
+            },
+            'to': appToken,
+          },
+        ),
+      );
     } catch (e) {
+      print('==================== Error ================');
       print(e.toString());
       notifyListeners();
     }
@@ -197,22 +239,22 @@ class MessageProvider extends ChangeNotifier {
       Users currentUserData, BuildContext context) async {
     try {
       final dir = await getApplicationDocumentsDirectory();
-      String ref = FirebaseStorage.instance.ref('${message['filePath']}').name;
-      await FirebaseStorage.instance
+      String ref = _storage.ref('${message['filePath']}').name;
+      await _storage
           .ref('${message['filePath']}')
           .writeToFile(File('${dir.path}/$ref'));
       Toast.show(
         'Downloaded File $ref',
       );
       if (sendTo == currentUserData.phoneNumber) {
-        await FirebaseFirestore.instance
+        await _fireStore
             .doc(
                 'chats/${message['sentFrom']['phoneNumber']}/$sendTo/${message['messageID']}')
             .update({
           'receiverFilePath': '${dir.path}/$ref',
           'messageType': 'File Saved 2',
         });
-        await FirebaseFirestore.instance
+        await _fireStore
             .doc(
                 'chats/$sendTo/${message['sentFrom']['phoneNumber']}/${message['messageID']}')
             .update({
@@ -222,14 +264,14 @@ class MessageProvider extends ChangeNotifier {
           showDownloadIndicator = false;
         });
       } else {
-        await FirebaseFirestore.instance
+        await _fireStore
             .doc(
                 'chats/${message['sentFrom']['phoneNumber']}/$sendTo/${message['messageID']}')
             .update({
           'message': '${dir.path}/$ref',
           'messageType': 'File Saved',
         });
-        await FirebaseFirestore.instance
+        await _fireStore
             .doc(
                 'chats/$sendTo/${message['sentFrom']['phoneNumber']}/${message['messageID']}')
             .update({
@@ -254,11 +296,11 @@ class MessageProvider extends ChangeNotifier {
 
   deleteMessage(Map<String, dynamic> message) async {
     try {
-      await FirebaseFirestore.instance
+      await _fireStore
           .doc('chats/${currentUserData!.phoneNumber}'
               '/${arguments['userData'].phoneNumber}/${message['messageID']}')
           .delete();
-      await FirebaseFirestore.instance
+      await _fireStore
           .doc('chats/${arguments['userData'].phoneNumber}'
               '/${currentUserData!.phoneNumber}/${message['messageID']}')
           .delete();
@@ -277,12 +319,11 @@ class MessageProvider extends ChangeNotifier {
       final _file = File(result!.paths.first.toString());
       isFileUploading = true;
       textFieldEnabled = false;
-      await FirebaseStorage.instance
+      await _storage
           .ref('files/$key/${result!.files.first.name}')
           .putFile(_file);
-      String fileUrl = FirebaseStorage.instance
-          .ref('files/$key/${result!.files.first.name}')
-          .fullPath;
+      String fileUrl =
+          _storage.ref('files/$key/${result!.files.first.name}').fullPath;
 
       currentMessage = fileUrl;
       isFileUploading = false;
@@ -294,6 +335,4 @@ class MessageProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-
 }

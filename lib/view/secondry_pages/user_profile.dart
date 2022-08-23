@@ -19,14 +19,13 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-   var userProfileData;
+  var userProfileData;
 
   @override
   void initState() {
     Future.delayed(Duration.zero, () async {
       (await FirebaseStorage.instance
-              .ref(
-                  'images/${userProfileData['userProfileData'].phoneNumber}/')
+              .ref('images/${userProfileData['userProfileData'].phoneNumber}/')
               .listAll())
           .items
           .forEach((element) {
@@ -77,11 +76,11 @@ class _UserProfileState extends State<UserProfile> {
                 },
                 child: CircleAvatar(
                   backgroundImage: const AssetImage('assets/images/avatar.jpg'),
-                  foregroundImage: (userProfileData['userProfileData'].personalImage ==
-                          null)
-                      ? null
-                      : NetworkImage(
-                          userProfileData['userProfileData'].personalImage),
+                  foregroundImage:
+                      (userProfileData['userProfileData'].personalImage == null)
+                          ? null
+                          : NetworkImage(
+                              userProfileData['userProfileData'].personalImage),
                   radius: 100,
                 ),
               ),
@@ -136,9 +135,10 @@ class _UserProfileState extends State<UserProfile> {
                       Navigator.pushNamed(context, MessagesScreen.routeName,
                           arguments: {
                             'userData': userProfileData['userProfileData'],
-                            'currentUserData':
-                                Provider.of<ChatProvider>(context,listen: false)
-                                    .currentUserData,
+                            'currentUserData': Provider.of<ChatProvider>(
+                                    context,
+                                    listen: false)
+                                .currentUserData,
                           });
                     },
                     icon: const Icon(

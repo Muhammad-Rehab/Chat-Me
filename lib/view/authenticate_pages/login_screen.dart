@@ -1,4 +1,3 @@
-
 import 'package:chat_me/controller/authenticate_provider.dart';
 
 import 'package:flutter/material.dart';
@@ -16,7 +15,8 @@ class _AuthenticateScreenState extends State<AuthenticateScreen> {
   bool _isVerifyScreen = false;
 
   final TextEditingController _phoneNumberController = TextEditingController();
-  final TextEditingController _otpVerificationController = TextEditingController();
+  final TextEditingController _otpVerificationController =
+      TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -33,7 +33,8 @@ class _AuthenticateScreenState extends State<AuthenticateScreen> {
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 15),
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+                  decoration:
+                      BoxDecoration(borderRadius: BorderRadius.circular(20)),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -41,7 +42,8 @@ class _AuthenticateScreenState extends State<AuthenticateScreen> {
                         keyboardType: TextInputType.number,
                         controller: _otpVerificationController,
                         decoration: InputDecoration(
-                          labelText: AppLocalizations.of(context)!.logInScreenOTP,
+                          labelText:
+                              AppLocalizations.of(context)!.logInScreenOTP,
                           labelStyle: const TextStyle(
                               fontSize: 18,
                               color: Colors.black,
@@ -60,7 +62,8 @@ class _AuthenticateScreenState extends State<AuthenticateScreen> {
                           FocusScope.of(context).unfocus();
                           if (_otpVerificationController.text.length > 6) {
                             Scaffold.of(context).showBottomSheet((context) =>
-                                 Text(AppLocalizations.of(context)!.logInScreenOTPError));
+                                Text(AppLocalizations.of(context)!
+                                    .logInScreenOTPError));
                           } else {
                             context
                                 .read<AuthenticationProvider>()
@@ -68,7 +71,8 @@ class _AuthenticateScreenState extends State<AuthenticateScreen> {
                                     _otpVerificationController.text, context);
                           }
                         },
-                        child:  Text(AppLocalizations.of(context)!.logInScreenVerify),
+                        child: Text(
+                            AppLocalizations.of(context)!.logInScreenVerify),
                       ),
                     ],
                   ),
@@ -89,7 +93,8 @@ class _AuthenticateScreenState extends State<AuthenticateScreen> {
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 15),
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+                    decoration:
+                        BoxDecoration(borderRadius: BorderRadius.circular(20)),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -97,16 +102,20 @@ class _AuthenticateScreenState extends State<AuthenticateScreen> {
                           keyboardType: TextInputType.phone,
                           validator: (value) {
                             if (value == null) {
-                              return AppLocalizations.of(context)!.logInScreenPhoneError1;
+                              return AppLocalizations.of(context)!
+                                  .logInScreenPhoneError1;
                             } else if (value.length > 11) {
-                              return AppLocalizations.of(context)!.logInScreenPhoneError2;
+                              return AppLocalizations.of(context)!
+                                  .logInScreenPhoneError2;
                             } else if (int.tryParse(value) == null) {
-                              return AppLocalizations.of(context)!.logInScreenPhoneError3;
+                              return AppLocalizations.of(context)!
+                                  .logInScreenPhoneError3;
                             }
                           },
                           controller: _phoneNumberController,
                           decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)!.logInScreenPhoneNumber,
+                            labelText: AppLocalizations.of(context)!
+                                .logInScreenPhoneNumber,
                             prefixText: '+2',
                             prefixStyle: const TextStyle(color: Colors.black),
                             labelStyle: const TextStyle(
@@ -134,8 +143,9 @@ class _AuthenticateScreenState extends State<AuthenticateScreen> {
                                 _isVerifyScreen = !_isVerifyScreen;
                               });
                             }
-                            },
-                          child:  Text(AppLocalizations.of(context)!.logInScreenSendSMS),
+                          },
+                          child: Text(
+                              AppLocalizations.of(context)!.logInScreenSendSMS),
                         ),
                       ],
                     ),

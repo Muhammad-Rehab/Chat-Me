@@ -19,14 +19,14 @@ class ChatsPage extends StatefulWidget {
 }
 
 class ChatsPageState extends State<ChatsPage> {
+  bool isLandScape = false;
 
-  bool isLandScape = false ;
-  double  paddingTop = 0 ;
+  double paddingTop = 0;
 
   @override
   Widget build(BuildContext context) {
-    paddingTop = MediaQuery.of(context).padding.top ;
-    isLandScape = MediaQuery.of(context).orientation == Orientation.landscape ;
+    paddingTop = MediaQuery.of(context).padding.top;
+    isLandScape = MediaQuery.of(context).orientation == Orientation.landscape;
     AppBar appBar = AppBar(
       elevation: 0,
       title: Text(AppLocalizations.of(context)!.chatPageTitle),
@@ -35,7 +35,8 @@ class ChatsPageState extends State<ChatsPage> {
           onPressed: () async {
             showSearch(
               context: context,
-              delegate: Search(Provider.of<ChatProvider>(context,listen: false).data),
+              delegate: Search(
+                  Provider.of<ChatProvider>(context, listen: false).data),
             );
           },
           icon: const Icon(
@@ -48,22 +49,27 @@ class ChatsPageState extends State<ChatsPage> {
       backgroundColor: Provider.of<ThemeProvider>(context).isDarkMode()
           ? const Color(0xFFA12568).withRed(100)
           : const Color(0xFF075E54),
-      appBar: appBar ,
+      appBar: appBar,
       body: Column(
         children: [
           Container(
-            height: isLandScape?0:(MediaQuery.of(context).size.height-paddingTop
-                -appBar.preferredSize.height) * .15 ,
+            height: isLandScape ? 0 : 100,
             margin: const EdgeInsets.all(8),
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: Provider.of<ChatProvider>(context,).data.length,
+              itemCount: Provider.of<ChatProvider>(
+                context,
+              ).data.length,
               itemBuilder: (ctx, index) => InkWell(
                 onTap: () {
                   Navigator.pushNamed(context, MessagesScreen.routeName,
                       arguments: {
-                        'userData': Provider.of<ChatProvider>(context,listen: false).data[index],
-                        'currentUserData': Provider.of<ChatProvider>(context,listen: false).currentUserData
+                        'userData':
+                            Provider.of<ChatProvider>(context, listen: false)
+                                .data[index],
+                        'currentUserData':
+                            Provider.of<ChatProvider>(context, listen: false)
+                                .currentUserData
                       });
                 },
                 child: Container(
@@ -83,7 +89,9 @@ class ChatsPageState extends State<ChatsPage> {
                               'assets/images/avatar.jpg',
                             ),
                             image: NetworkImage(
-                                Provider.of<ChatProvider>(context).data[index].personalImage),
+                                Provider.of<ChatProvider>(context)
+                                    .data[index]
+                                    .personalImage),
                             fit: BoxFit.fill,
                           ),
                         ),
@@ -92,7 +100,9 @@ class ChatsPageState extends State<ChatsPage> {
                         height: 6,
                       ),
                       Text(
-                        Provider.of<ChatProvider>(context,listen: false).data[index].firstName,
+                        Provider.of<ChatProvider>(context, listen: false)
+                            .data[index]
+                            .firstName,
                         style: const TextStyle(fontSize: 14),
                       ),
                     ],
@@ -118,8 +128,9 @@ class ChatsPageState extends State<ChatsPage> {
                         child: CircularProgressIndicator(),
                       )
                     : (snapShot.data == null || snapShot.data!.isEmpty)
-                        ?  Center(
-                            child: Text(AppLocalizations.of(context)!.chatPageError),
+                        ? Center(
+                            child: Text(
+                                AppLocalizations.of(context)!.chatPageError),
                           )
                         : ListView.builder(
                             itemCount: snapShot.data!.length,
@@ -129,13 +140,16 @@ class ChatsPageState extends State<ChatsPage> {
                                   Navigator.pushNamed(
                                       context, MessagesScreen.routeName,
                                       arguments: {
-                                        'userData': (snapShot.data![index].sentTo.phoneNumber ==
+                                        'userData': (snapShot.data![index]
+                                                    .sentTo.phoneNumber ==
                                                 FirebaseAuth.instance
                                                     .currentUser!.phoneNumber)
                                             ? snapShot.data![index].sentFrom
                                             : snapShot.data![index].sentTo,
                                         'currentUserData': (snapShot
-                                                        .data![index].sentTo.phoneNumber ==
+                                                    .data![index]
+                                                    .sentTo
+                                                    .phoneNumber ==
                                                 FirebaseAuth.instance
                                                     .currentUser!.phoneNumber)
                                             ? snapShot.data![index].sentTo
@@ -163,14 +177,18 @@ class ChatsPageState extends State<ChatsPage> {
                                             placeholder: const AssetImage(
                                               'assets/images/avatar.jpg',
                                             ),
-                                            image: NetworkImage(
-                                                (snapShot.data![index].sentTo.phoneNumber ==
-                                                        FirebaseAuth
-                                                            .instance
-                                                            .currentUser!
-                                                            .phoneNumber)
-                                                    ? snapShot.data![index].sentFrom.personalImage
-                                                    : snapShot.data![index].sentTo.personalImage),
+                                            image: NetworkImage((snapShot
+                                                        .data![index]
+                                                        .sentTo
+                                                        .phoneNumber ==
+                                                    FirebaseAuth
+                                                        .instance
+                                                        .currentUser!
+                                                        .phoneNumber)
+                                                ? snapShot.data![index].sentFrom
+                                                    .personalImage
+                                                : snapShot.data![index].sentTo
+                                                    .personalImage),
                                             fit: BoxFit.fill,
                                           ),
                                         ),
@@ -185,7 +203,8 @@ class ChatsPageState extends State<ChatsPage> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              (snapShot.data![index].sentTo.phoneNumber ==
+                                              (snapShot.data![index].sentTo
+                                                          .phoneNumber ==
                                                       FirebaseAuth
                                                           .instance
                                                           .currentUser!
@@ -200,8 +219,13 @@ class ChatsPageState extends State<ChatsPage> {
                                               height: 6,
                                             ),
                                             Text(
-                                              (snapShot.data![index].messageType=='String')?snapShot.data![index].message:
-                                              p.basename(snapShot.data![index].message),
+                                              (snapShot.data![index]
+                                                          .messageType ==
+                                                      'String')
+                                                  ? snapShot
+                                                      .data![index].message
+                                                  : p.basename(snapShot
+                                                      .data![index].message),
                                               style: Theme.of(context)
                                                   .textTheme
                                                   .subtitle2,
@@ -217,27 +241,46 @@ class ChatsPageState extends State<ChatsPage> {
                                       Column(
                                         children: [
                                           Text(
-                                             Provider.of<ChatProvider>(context).getDate(snapShot.data![index].time.toDate(), context),
+                                            Provider.of<ChatProvider>(context)
+                                                .getDate(
+                                                    snapShot.data![index].time
+                                                        .toDate(),
+                                                    context),
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 12,
                                             ),
                                           ),
                                           FutureBuilder<String>(
-                                            future: (snapShot.data![index].sentTo.phoneNumber ==
+                                            future: (snapShot.data![index]
+                                                        .sentTo.phoneNumber ==
                                                     FirebaseAuth
                                                         .instance
                                                         .currentUser!
                                                         .phoneNumber)
-                                                ? Provider.of<ChatProvider>(context).getUserActivity(
-                                                    snapShot.data![index]
-                                                        .sentFrom.id)
-                                                : Provider.of<ChatProvider>(context).getUserActivity(
-                                                    snapShot.data![index].sentTo.id),
+                                                ? Provider.of<ChatProvider>(
+                                                        context)
+                                                    .getUserActivity(snapShot
+                                                        .data![index]
+                                                        .sentFrom
+                                                        .id)
+                                                : Provider.of<ChatProvider>(
+                                                        context)
+                                                    .getUserActivity(snapShot
+                                                        .data![index]
+                                                        .sentTo
+                                                        .id),
                                             builder: (_, snapShot2) => Chip(
-                                              label: Text((snapShot2.data == 'Active'||snapShot2.data=='Connected')
-                                                  ? AppLocalizations.of(context)!.userActivityActive
-                                                  : AppLocalizations.of(context)!.userActivityInActive),
+                                              label: Text((snapShot2.data ==
+                                                          'Active' ||
+                                                      snapShot2.data ==
+                                                          'Connected')
+                                                  ? AppLocalizations.of(
+                                                          context)!
+                                                      .userActivityActive
+                                                  : AppLocalizations.of(
+                                                          context)!
+                                                      .userActivityInActive),
                                             ),
                                           ),
                                         ],

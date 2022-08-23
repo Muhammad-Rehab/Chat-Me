@@ -12,7 +12,6 @@ class UserImages extends StatefulWidget {
 }
 
 class _UserImagesState extends State<UserImages> {
-
   PageController controller = PageController(
     viewportFraction: .80,
   );
@@ -53,7 +52,7 @@ class _UserImagesState extends State<UserImages> {
         ),
       ),
       body: (imagesUrlList.isEmpty)
-          ?  Center(
+          ? Center(
               child: Text(AppLocalizations.of(context)!.userImagesLoading),
             )
           : PageView.builder(
