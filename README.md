@@ -2,15 +2,32 @@
 
 A new Flutter project.
 
-## Getting Started
+# View
+• Chat application for make people contact with others easily.
+• Social application with communications features.
+• Messaging with others with the first aim.
 
-This project is a starting point for a Flutter application.
+# Features
+• Unlimited chat with any one uses application.
+• Sending and receiving any type of files.
+• Downloading and uploading unlimited size files.
+• Audio player.
+• Recording audio message.
+• Video call.
+• Dealing with files smoothly.
+• Phone Authentication.
+• Light & Dark theme.
+• Two languages available (Arabic & English).
+• Smooth User Interfaces.
+• Responsive.
+• Sending notifications
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Programing
+• Dart language.
+• Flutter framework.
+• MVC design pattern.
+• Firebase as a backend database.
+• Firebase Authentications.
+• Firebase Storage for store files.
+• State Management with provider package.
+• Flutter localization
